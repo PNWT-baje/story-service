@@ -1,13 +1,14 @@
-package ba.etf.unsa.storyservice.model;
+package ba.unsa.etf.storyservice.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "story_reactions")
+@Table(name = "story_views",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"story_id", "viewer_user_id"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class StoryReaction {
+public class StoryView {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,16 +20,13 @@ public class StoryReaction {
 
     // eksterna referenca na User Service
     @Column(nullable = false)
-    private Long userId;
-
-    @Column(nullable = false, length = 10)
-    private String emoji;
+    private Long viewerUserId;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime viewedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        viewedAt = LocalDateTime.now();
     }
 }

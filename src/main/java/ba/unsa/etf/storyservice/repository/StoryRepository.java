@@ -1,6 +1,6 @@
-package ba.etf.unsa.storyservice.repository;
+package ba.unsa.etf.storyservice.repository;
 
-import ba.etf.unsa.storyservice.model.Story;
+import ba.unsa.etf.storyservice.model.Story;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;

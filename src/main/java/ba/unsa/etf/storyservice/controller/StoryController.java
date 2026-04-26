@@ -1,9 +1,9 @@
-package ba.etf.unsa.storyservice.controller;
+package ba.unsa.etf.storyservice.controller;
 
-import ba.etf.unsa.storyservice.model.Story;
-import ba.etf.unsa.storyservice.model.StoryView;
-import ba.etf.unsa.storyservice.repository.StoryRepository;
-import ba.etf.unsa.storyservice.repository.StoryViewRepository;
+import ba.unsa.etf.storyservice.model.Story;
+import ba.unsa.etf.storyservice.model.StoryView;
+import ba.unsa.etf.storyservice.repository.StoryRepository;
+import ba.unsa.etf.storyservice.repository.StoryViewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +51,7 @@ public class StoryController {
     // Zabilježi pregled storija
     @PostMapping("/{storyId}/view")
     public ResponseEntity<StoryView> viewStory(@PathVariable Long storyId,
-                                               @RequestParam Long viewerUserId) {
+                                                @RequestParam Long viewerUserId) {
         Story story = storyRepository.findById(storyId).orElse(null);
         if (story == null) return ResponseEntity.notFound().build();
 

@@ -1,4 +1,4 @@
-package ba.etf.unsa.storyservice.enums;
+package ba.unsa.etf.storyservice.enums;
 
 public enum StoryType {
     PHOTO,

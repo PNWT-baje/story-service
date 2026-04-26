@@ -1,11 +1,11 @@
-package ba.etf.unsa.storyservice.controller;
+package ba.unsa.etf.storyservice.controller;
 
-import ba.etf.unsa.storyservice.model.Story;
-import ba.etf.unsa.storyservice.model.StoryPollOption;
-import ba.etf.unsa.storyservice.model.StoryPollVote;
-import ba.etf.unsa.storyservice.repository.StoryPollOptionRepository;
-import ba.etf.unsa.storyservice.repository.StoryRepository;
-import ba.etf.unsa.storyservice.repository.StoryPollVoteRepository;
+import ba.unsa.etf.storyservice.model.Story;
+import ba.unsa.etf.storyservice.model.StoryPollOption;
+import ba.unsa.etf.storyservice.model.StoryPollVote;
+import ba.unsa.etf.storyservice.repository.StoryPollOptionRepository;
+import ba.unsa.etf.storyservice.repository.StoryPollVoteRepository;
+import ba.unsa.etf.storyservice.repository.StoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +30,8 @@ public class StoryPollController {
     // Glasaj za opciju
     @PostMapping("/vote/{optionId}")
     public ResponseEntity<StoryPollVote> vote(@PathVariable Long storyId,
-                                              @PathVariable Long optionId,
-                                              @RequestParam Long userId) {
+                                               @PathVariable Long optionId,
+                                               @RequestParam Long userId) {
         // Provjeri da story postoji i nije istekao
         Story story = storyRepository.findById(storyId).orElse(null);
         if (story == null) return ResponseEntity.notFound().build();

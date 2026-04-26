@@ -1,6 +1,6 @@
-package ba.etf.unsa.storyservice.model;
+package ba.unsa.etf.storyservice.model;
 
-import ba.etf.unsa.storyservice.enums.StoryType;
+import ba.unsa.etf.storyservice.enums.StoryType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

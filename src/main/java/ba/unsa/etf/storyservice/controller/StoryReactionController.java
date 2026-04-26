@@ -1,9 +1,9 @@
-package ba.etf.unsa.storyservice.controller;
+package ba.unsa.etf.storyservice.controller;
 
-import ba.etf.unsa.storyservice.model.Story;
-import ba.etf.unsa.storyservice.model.StoryReaction;
-import ba.etf.unsa.storyservice.repository.StoryRepository;
-import ba.etf.unsa.storyservice.repository.StoryReactionRepository;
+import ba.unsa.etf.storyservice.model.Story;
+import ba.unsa.etf.storyservice.model.StoryReaction;
+import ba.unsa.etf.storyservice.repository.StoryReactionRepository;
+import ba.unsa.etf.storyservice.repository.StoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +21,8 @@ public class StoryReactionController {
     // Dodaj reakciju na story
     @PostMapping
     public ResponseEntity<StoryReaction> addReaction(@PathVariable Long storyId,
-                                                     @RequestParam Long userId,
-                                                     @RequestParam String emoji) {
+                                                      @RequestParam Long userId,
+                                                      @RequestParam String emoji) {
         Story story = storyRepository.findById(storyId).orElse(null);
         if (story == null) return ResponseEntity.notFound().build();
 

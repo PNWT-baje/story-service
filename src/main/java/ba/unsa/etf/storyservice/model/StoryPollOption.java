@@ -1,4 +1,4 @@
-package ba.etf.unsa.storyservice.model;
+package ba.unsa.etf.storyservice.model;
 
 import jakarta.persistence.*;
 import lombok.*;
