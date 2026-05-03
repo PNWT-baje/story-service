@@ -1,10 +1,13 @@
 package ba.unsa.etf.storyservice.controller;
 
-import ba.unsa.etf.storyservice.model.Story;
-import ba.unsa.etf.storyservice.model.StoryView;
-import ba.unsa.etf.storyservice.repository.StoryRepository;
+import ba.unsa.etf.storyservice.dto.CreateStoryRequest;
+import ba.unsa.etf.storyservice.enums.StoryType;
+import ba.unsa.etf.storyservice.model.*;
 import ba.unsa.etf.storyservice.repository.StoryViewRepository;
+import ba.unsa.etf.storyservice.service.StoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,74 +19,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StoryController {
 
-    private final StoryRepository storyRepository;
+    private final StoryService storyService;
     private final StoryViewRepository storyViewRepository;
 
-    // Kreiranje novog storija
     @PostMapping
-    public ResponseEntity<Story> createStory(@RequestBody Story story) {
-        return ResponseEntity.ok(storyRepository.save(story));
+    public ResponseEntity<Story> createStory(@Valid @RequestBody CreateStoryRequest request) {
+        Story story = Story.builder()
+                .userId(request.getUserId())
+                .type(request.getType())
+                .mediaUrl(request.getMediaUrl())
+                .caption(request.getCaption())
+                .hasPoll(request.getHasPoll() != null ? request.getHasPoll() : false)
+                .pollQuestion(request.getPollQuestion())
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(storyService.createStory(story));
     }
 
-    // Dohvati aktivne storije korisnika
     @GetMapping("/user/{userId}")
     public List<Story> getActiveStoriesByUser(@PathVariable Long userId) {
-        return storyRepository.findByUserIdAndExpiresAtAfterOrderByCreatedAtDesc(
-                userId, LocalDateTime.now());
+        return storyService.getActiveStoriesByUser(userId);
     }
 
-    // Dohvati jedan story po ID-u
     @GetMapping("/{id}")
     public ResponseEntity<Story> getStoryById(@PathVariable Long id) {
-        return storyRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(storyService.getStoryById(id));
     }
 
-    // Obriši story
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStory(@PathVariable Long id) {
-        if (!storyRepository.existsById(id)) return ResponseEntity.notFound().build();
-        storyRepository.deleteById(id);
+        storyService.deleteStory(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Zabilježi pregled storija
     @PostMapping("/{storyId}/view")
     public ResponseEntity<StoryView> viewStory(@PathVariable Long storyId,
-                                                @RequestParam Long viewerUserId) {
-        Story story = storyRepository.findById(storyId).orElse(null);
-        if (story == null) return ResponseEntity.notFound().build();
-
-        // Ne bilježi duplikat
-        if (storyViewRepository.existsByStoryIdAndViewerUserId(storyId, viewerUserId)) {
-            return ResponseEntity.ok().build();
-        }
-
-        StoryView view = StoryView.builder()
-                .story(story)
-                .viewerUserId(viewerUserId)
-                .build();
-        return ResponseEntity.ok(storyViewRepository.save(view));
+                                               @RequestParam Long viewerUserId) {
+        StoryView view = storyService.viewStory(storyId, viewerUserId);
+        return ResponseEntity.ok(view);
     }
 
-    // Ko je pregledao story (samo vlasnik može vidjeti)
     @GetMapping("/{storyId}/viewers")
     public ResponseEntity<List<StoryView>> getStoryViewers(@PathVariable Long storyId,
-                                                            @RequestParam Long requesterId) {
-        Story story = storyRepository.findById(storyId).orElse(null);
-        if (story == null) return ResponseEntity.notFound().build();
-
-        if (!story.getUserId().equals(requesterId)) {
-            return ResponseEntity.status(403).build();
-        }
-
-        return ResponseEntity.ok(storyViewRepository.findByStoryId(storyId));
+                                                           @RequestParam Long requesterId) {
+        return ResponseEntity.ok(storyService.getViewers(storyId, requesterId));
     }
 
-    // Broj pregleda storija
     @GetMapping("/{storyId}/views/count")
     public ResponseEntity<Long> getViewCount(@PathVariable Long storyId) {
-        return ResponseEntity.ok(storyViewRepository.countByStoryId(storyId));
+        return ResponseEntity.ok(storyService.getViewCount(storyId));
     }
 }
