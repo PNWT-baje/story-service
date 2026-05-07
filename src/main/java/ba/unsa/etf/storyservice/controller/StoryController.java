@@ -1,17 +1,20 @@
 package ba.unsa.etf.storyservice.controller;
 
 import ba.unsa.etf.storyservice.dto.CreateStoryRequest;
-import ba.unsa.etf.storyservice.enums.StoryType;
-import ba.unsa.etf.storyservice.model.*;
-import ba.unsa.etf.storyservice.repository.StoryViewRepository;
+import ba.unsa.etf.storyservice.dto.StoryPatchDto;
+import ba.unsa.etf.storyservice.model.Story;
+import ba.unsa.etf.storyservice.model.StoryView;
 import ba.unsa.etf.storyservice.service.StoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -20,7 +23,6 @@ import java.util.List;
 public class StoryController {
 
     private final StoryService storyService;
-    private final StoryViewRepository storyViewRepository;
 
     @PostMapping
     public ResponseEntity<Story> createStory(@Valid @RequestBody CreateStoryRequest request) {
@@ -40,9 +42,30 @@ public class StoryController {
         return storyService.getActiveStoriesByUser(userId);
     }
 
+    // Pageable — Task 4: paginacija i sortiranje
+    @GetMapping("/user/{userId}/paged")
+    public Page<Story> getStoriesByUserPaged(
+            @PathVariable Long userId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return storyService.getActiveStoriesByUserPaged(userId, pageable);
+    }
+
+    // Custom @Query endpoint — Task 4
+    @GetMapping("/trending")
+    public List<Story> getTrendingStories(@RequestParam(defaultValue = "1") int minViews) {
+        return storyService.getActiveStoriesWithMinViews(minViews);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Story> getStoryById(@PathVariable Long id) {
         return ResponseEntity.ok(storyService.getStoryById(id));
+    }
+
+    // PATCH — Task 4: parcijalni update
+    @PatchMapping("/{id}")
+    public ResponseEntity<Story> patchStory(@PathVariable Long id,
+                                             @RequestBody StoryPatchDto patch) {
+        return ResponseEntity.ok(storyService.patchStory(id, patch));
     }
 
     @DeleteMapping("/{id}")
@@ -56,6 +79,14 @@ public class StoryController {
                                                @RequestParam Long viewerUserId) {
         StoryView view = storyService.viewStory(storyId, viewerUserId);
         return ResponseEntity.ok(view);
+    }
+
+    // Multi-repo transakcija — Task 4: view + reakcija u jednoj transakciji
+    @PostMapping("/{storyId}/view-and-react")
+    public ResponseEntity<StoryView> viewAndReact(@PathVariable Long storyId,
+                                                   @RequestParam Long viewerUserId,
+                                                   @RequestParam(required = false) String emoji) {
+        return ResponseEntity.ok(storyService.viewAndReact(storyId, viewerUserId, emoji));
     }
 
     @GetMapping("/{storyId}/viewers")
