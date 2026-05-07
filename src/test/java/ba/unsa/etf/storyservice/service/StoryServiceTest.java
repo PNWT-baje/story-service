@@ -1,5 +1,6 @@
 package ba.unsa.etf.storyservice.service;
 
+import ba.unsa.etf.storyservice.client.RemoteUserClient;
 import ba.unsa.etf.storyservice.enums.StoryType;
 import ba.unsa.etf.storyservice.exception.ResourceNotFoundException;
 import ba.unsa.etf.storyservice.exception.StoryExpiredException;
@@ -28,6 +29,7 @@ class StoryServiceTest {
     @Mock private StoryReactionRepository reactionRepository;
     @Mock private StoryPollOptionRepository pollOptionRepository;
     @Mock private StoryPollVoteRepository pollVoteRepository;
+    @Mock private RemoteUserClient remoteUserClient;
 
     @InjectMocks
     private StoryService storyService;
@@ -57,6 +59,9 @@ class StoryServiceTest {
                 .expiresAt(LocalDateTime.now().minusHours(2))
                 .createdAt(LocalDateTime.now().minusHours(26))
                 .build();
+
+        // Task 5: defaultno korisnik postoji (fail-open); lenient jer ne koriste svi testovi createStory
+        lenient().when(remoteUserClient.userExists(anyLong())).thenReturn(true);
     }
 
     @Test

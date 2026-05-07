@@ -1,5 +1,6 @@
 package ba.unsa.etf.storyservice.service;
 
+import ba.unsa.etf.storyservice.client.RemoteUserClient;
 import ba.unsa.etf.storyservice.dto.BatchVoteRequest;
 import ba.unsa.etf.storyservice.dto.StoryPatchDto;
 import ba.unsa.etf.storyservice.exception.ResourceNotFoundException;
@@ -25,8 +26,13 @@ public class StoryService {
     private final StoryReactionRepository reactionRepository;
     private final StoryPollOptionRepository pollOptionRepository;
     private final StoryPollVoteRepository pollVoteRepository;
+    private final RemoteUserClient remoteUserClient;
 
     public Story createStory(Story story) {
+        // Task 5: verifikacija korisnika u user-service (fail-open)
+        if (!remoteUserClient.userExists(story.getUserId())) {
+            throw new IllegalArgumentException("Korisnik sa ID " + story.getUserId() + " ne postoji");
+        }
         return storyRepository.save(story);
     }
 
