@@ -11,6 +11,7 @@ import ba.unsa.etf.storyservice.service.StoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,11 +27,13 @@ public class StoryPollController {
     private final StoryService storyService;
 
     @GetMapping("/options")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<StoryPollOption>> getPollOptions(@PathVariable Long storyId) {
         return ResponseEntity.ok(pollOptionRepository.findByStoryIdOrderByDisplayOrder(storyId));
     }
 
     @PostMapping("/vote/{optionId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
     public ResponseEntity<StoryPollVote> vote(@PathVariable Long storyId,
                                                @PathVariable Long optionId,
                                                @RequestParam Long userId) {
@@ -51,13 +54,15 @@ public class StoryPollController {
     }
 
     @GetMapping("/options/{optionId}/votes")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Long> getVoteCount(@PathVariable Long storyId,
                                               @PathVariable Long optionId) {
         return ResponseEntity.ok(pollVoteRepository.countByPollOptionId(optionId));
     }
 
-    // Batch vote — Task 4: batch unos
+    /** Batch vote — analysts are excluded as they cannot create data. */
     @PostMapping("/votes/batch")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
     public ResponseEntity<List<StoryPollVote>> batchVote(@PathVariable Long storyId,
                                                           @Valid @RequestBody BatchVoteRequest request) {
         return ResponseEntity.ok(storyService.batchVote(storyId, request.getVotes()));
