@@ -33,4 +33,7 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     // Napomena: Hibernate ne dopusta simultani eager-load dvije List kolekcije (MultipleBagFetchException)
     @EntityGraph(attributePaths = {"views"})
     Optional<Story> findWithDetailsById(Long id);
+
+    // Feed — aktivni storiji za listu korisnika, sortirani od najnovijeg
+    List<Story> findByUserIdInAndExpiresAtAfterOrderByCreatedAtDesc(List<Long> userIds, LocalDateTime now);
 }

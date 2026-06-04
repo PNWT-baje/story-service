@@ -1,5 +1,6 @@
 package ba.unsa.etf.storyservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class StoryPollVote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "story_poll_option_id", nullable = false)
     private StoryPollOption pollOption;

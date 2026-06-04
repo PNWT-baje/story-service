@@ -31,19 +31,25 @@ public class StoryService {
     public Story createStory(Story story) {
         // Task 5: verifikacija korisnika u user-service (fail-open)
         if (!remoteUserClient.userExists(story.getUserId())) {
-            throw new IllegalArgumentException("Korisnik sa ID " + story.getUserId() + " ne postoji");
+            throw new IllegalArgumentException("User with ID " + story.getUserId() + " does not exist");
         }
         return storyRepository.save(story);
     }
 
     public Story getStoryById(Long id) {
         return storyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Story sa ID " + id + " nije pronađen"));
+                .orElseThrow(() -> new ResourceNotFoundException("Story with ID " + id + " not found"));
     }
 
     public List<Story> getActiveStoriesByUser(Long userId) {
         return storyRepository.findByUserIdAndExpiresAtAfterOrderByCreatedAtDesc(
                 userId, LocalDateTime.now());
+    }
+
+    // Feed — aktivni storiji za listu korisnika (npr. oni koje korisnik prati)
+    public List<Story> getStoriesByUserIds(List<Long> userIds) {
+        return storyRepository.findByUserIdInAndExpiresAtAfterOrderByCreatedAtDesc(
+                userIds, LocalDateTime.now());
     }
 
     // Pageable — Task 4: paginacija i sortiranje
@@ -67,7 +73,7 @@ public class StoryService {
 
     public void deleteStory(Long id) {
         if (!storyRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Story sa ID " + id + " nije pronađen");
+            throw new ResourceNotFoundException("Story with ID " + id + " not found");
         }
         storyRepository.deleteById(id);
     }
@@ -89,7 +95,7 @@ public class StoryService {
     public StoryView viewAndReact(Long storyId, Long viewerUserId, String emoji) {
         Story story = getStoryById(storyId);
         if (story.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new StoryExpiredException("Story je istekao");
+            throw new StoryExpiredException("Story has expired");
         }
         StoryView view = null;
         if (!storyViewRepository.existsByStoryIdAndViewerUserId(storyId, viewerUserId)) {
@@ -106,7 +112,7 @@ public class StoryService {
     public List<StoryView> getViewers(Long storyId, Long requesterId) {
         Story story = getStoryById(storyId);
         if (!story.getUserId().equals(requesterId)) {
-            throw new ResourceNotFoundException("Nemate pristup ovim podacima");
+            throw new ResourceNotFoundException("You do not have access to this data");
         }
         return storyViewRepository.findByStoryId(storyId);
     }
@@ -128,7 +134,7 @@ public class StoryService {
 
     public void removeReaction(Long reactionId) {
         if (!reactionRepository.existsById(reactionId)) {
-            throw new ResourceNotFoundException("Reakcija nije pronađena");
+            throw new ResourceNotFoundException("Reaction not found");
         }
         reactionRepository.deleteById(reactionId);
     }
@@ -140,13 +146,13 @@ public class StoryService {
     public StoryPollVote vote(Long storyId, Long optionId, Long userId) {
         Story story = getStoryById(storyId);
         if (story.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new StoryExpiredException("Story je istekao, glasanje nije moguće");
+            throw new StoryExpiredException("Story has expired, voting is not possible");
         }
         if (pollVoteRepository.existsByPollOptionIdAndUserId(optionId, userId)) {
-            throw new RuntimeException("Već si glasao za ovu opciju");
+            throw new RuntimeException("You have already voted for this option");
         }
         StoryPollOption option = pollOptionRepository.findById(optionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Opcija nije pronađena"));
+                .orElseThrow(() -> new ResourceNotFoundException("Option not found"));
         option.setVoteCount(option.getVoteCount() + 1);
         pollOptionRepository.save(option);
         StoryPollVote pollVote = StoryPollVote.builder()
@@ -159,13 +165,13 @@ public class StoryService {
     public List<StoryPollVote> batchVote(Long storyId, List<BatchVoteRequest.VoteItem> voteItems) {
         Story story = getStoryById(storyId);
         if (story.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new StoryExpiredException("Story je istekao, glasanje nije moguće");
+            throw new StoryExpiredException("Story has expired, voting is not possible");
         }
         List<StoryPollVote> votes = voteItems.stream()
                 .filter(v -> !pollVoteRepository.existsByPollOptionIdAndUserId(v.getOptionId(), v.getUserId()))
                 .map(v -> {
                     StoryPollOption option = pollOptionRepository.findById(v.getOptionId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Opcija nije pronađena"));
+                            .orElseThrow(() -> new ResourceNotFoundException("Option not found"));
                     option.setVoteCount(option.getVoteCount() + 1);
                     pollOptionRepository.save(option);
                     return StoryPollVote.builder()

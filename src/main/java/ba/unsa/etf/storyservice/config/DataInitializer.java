@@ -21,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (storyRepository.count() > 0) return;
 
         // Kreiranje storija — foto story (user 1)
         Story story1 = Story.builder()

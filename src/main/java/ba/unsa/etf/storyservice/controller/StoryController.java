@@ -26,7 +26,7 @@ public class StoryController {
     private final StoryService storyService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Story> createStory(@Valid @RequestBody CreateStoryRequest request) {
         Story story = Story.builder()
                 .userId(request.getUserId())
@@ -43,6 +43,15 @@ public class StoryController {
     @PreAuthorize("isAuthenticated()")
     public List<Story> getActiveStoriesByUser(@PathVariable Long userId) {
         return storyService.getActiveStoriesByUser(userId);
+    }
+
+    @GetMapping("/feed")
+    @PreAuthorize("isAuthenticated()")
+    public List<Story> getStoriesFeed(@RequestParam(required = false) List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return storyService.getStoriesByUserIds(userIds);
     }
 
     @GetMapping("/user/{userId}/paged")
@@ -67,21 +76,21 @@ public class StoryController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Story> patchStory(@PathVariable Long id,
                                              @RequestBody StoryPatchDto patch) {
         return ResponseEntity.ok(storyService.patchStory(id, patch));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteStory(@PathVariable Long id) {
         storyService.deleteStory(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{storyId}/view")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<StoryView> viewStory(@PathVariable Long storyId,
                                                @RequestParam Long viewerUserId) {
         StoryView view = storyService.viewStory(storyId, viewerUserId);
@@ -89,7 +98,7 @@ public class StoryController {
     }
 
     @PostMapping("/{storyId}/view-and-react")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<StoryView> viewAndReact(@PathVariable Long storyId,
                                                    @RequestParam Long viewerUserId,
                                                    @RequestParam(required = false) String emoji) {
@@ -98,7 +107,7 @@ public class StoryController {
 
     /** Story viewers — owner, moderators, and admin only. */
     @GetMapping("/{storyId}/viewers")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'CONTENT_MANAGER', 'USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<StoryView>> getStoryViewers(@PathVariable Long storyId,
                                                            @RequestParam Long requesterId) {
         return ResponseEntity.ok(storyService.getViewers(storyId, requesterId));
